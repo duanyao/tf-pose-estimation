@@ -44,6 +44,15 @@ def write_coco_json(human, image_w, image_h):
         keypoints.extend([round_int(body_part.x * image_w), round_int(body_part.y * image_h), 2])
     return keypoints
 
+def get_keypoint_dict(human, image_w, image_h):
+    keypoints = { }
+    coco_ids = [0, 15, 14, 1, 17, 16, 5, 2, 6, 3, 7, 4, 11, 8, 12, 9, 13, 10]
+    for coco_id in coco_ids:
+        if coco_id not in human.body_parts.keys():
+            continue
+        body_part = human.body_parts[coco_id]
+        keypoints[body_part.get_part_name().name] = { 'x': body_part.x * image_w, 'y': body_part.y * image_h, 'coco_id': coco_id }
+    return { 'keypoints': keypoints, 'score': human.score }
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Tensorflow Openpose Inference')
