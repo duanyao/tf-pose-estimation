@@ -11,25 +11,28 @@ import time
 from tf_pose import common
 from tf_pose.common import CocoPart
 from tf_pose.tensblur.smoother import Smoother
-import tensorflow.contrib.tensorrt as trt
+
+try:
+    import tensorflow.contrib.tensorrt as trt
+except Exception as e:
+    logging.exception(e)
+    logging.warning('you will not be able to use tensorrt:')
 
 try:
     from tf_pose.pafprocess import pafprocess
 except ModuleNotFoundError as e:
-    print(e)
-    print('you need to build c++ library for pafprocess. See : https://github.com/ildoonet/tf-pose-estimation/tree/master/tf_pose/pafprocess')
+    logging.exception(e)
+    logging.error('you need to build c++ library for pafprocess. See : https://github.com/ildoonet/tf-pose-estimation/tree/master/tf_pose/pafprocess')
     exit(-1)
 
 logger = logging.getLogger('TfPoseEstimator')
 #logger.handlers.clear()
 logger.handlers[:]
-logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.setLevel(logging.INFO)
-
 
 def _round(v):
     return int(round(v))
@@ -323,9 +326,9 @@ class TfPoseEstimator:
                 precision_mode="FP16",
                 # precision_mode="INT8",
                 minimum_segment_size=3,
-                is_dynamic_op=True,
-                maximum_cached_engines=int(1e3),
-                use_calibration=True,
+                # is_dynamic_op=True, # not on tf 1.7 + trt 4
+                # maximum_cached_engines=int(1e3), # not on tf 1.7 + trt 4
+                # use_calibration=True, # not on tf 1.14 + trt 5.1 and not on tf 1.7 + trt 4
             )
 
         self.graph = tf.get_default_graph()
@@ -333,7 +336,7 @@ class TfPoseEstimator:
         self.persistent_sess = tf.Session(graph=self.graph, config=tf_config)
 
         for ts in [n.name for n in tf.get_default_graph().as_graph_def().node]:
-            print(ts)
+            logger.debug(ts)
 
         self.tensor_image = self.graph.get_tensor_by_name('TfPoseEstimator/image:0')
         self.tensor_output = self.graph.get_tensor_by_name('TfPoseEstimator/Openpose/concat_stage7:0')
@@ -577,6 +580,6 @@ if __name__ == '__main__':
 
     t = time.time()
     humans = PoseEstimator.estimate_paf(data['peaks'], data['heatMat'], data['pafMat'])
-    dt = time.time() - t;
+    dt = time.time() - t
     t = time.time()
     logger.info('elapsed #humans=%d time=%.8f' % (len(humans), dt))
