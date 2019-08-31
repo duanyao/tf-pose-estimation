@@ -30,6 +30,36 @@ logging.getLogger().setLevel(logging.INFO)
 tStart = 0
 finishedCount = 0
 
+coco_id_to_string = [
+    'nose',# 0
+    'neck',# 1
+    'right_shoulder',# 2
+    'right_elbow',# 3
+    'right_wrist',# 4
+    'left_shoulder',# 5
+    'left_elbow',# 6
+    'left_wrist',# 7
+    'right_hip',# 8
+    'right_knee',# 9
+    'right_ankle',# 10
+    'left_hip',# 11
+    'left_knee',# 12
+    'left_ankle',# 13
+    'right_eye',# 14
+    'left_eye',# 15
+    'right_ear',# 16
+    'left_ear',# 17
+    'background',# 18
+]
+
+def convert_body_keypoints(human, image_w, image_h):
+    body_keypoints = { 'score': human.score, 'face_box': human.get_face_box(image_w, image_h),
+        'upper_body_box': human.get_upper_body_box(image_w, image_h), }
+    for i, body_part in human.body_parts.items():
+        body_keypoints[coco_id_to_string[i]] = { 'x': body_part.x * image_w, 'y': body_part.y * image_h,
+            'score': body_part.score, 'coco_id': i }
+    return body_keypoints
+
 class InferTask:
     def __init__(self, inputImagePath, sn):
         self.inputImagePath = inputImagePath
@@ -62,12 +92,12 @@ class InferTask:
                 humans = tfPoseEstimator.inference(self.inputImage, resize_to_default=True, upsample_size=4.0)
                 
                 image_h, image_w = self.inputImage.shape[:2]
-                body_list = [eval.get_keypoint_dict(human, image_w, image_h) for human in humans]
+                body_list = [convert_body_keypoints(human, image_w, image_h) for human in humans]
                 self.result = { 'w': image_w, 'h': image_h, 'src': self.inputImagePath, 'body_list': body_list }
                 self.originResult = humans
                 self.hasError = False
             except Exception as e:
-                self.result = { 'error': { 'code': 'INTERNAL_ERROR', 'message': 'error infer image: ' + self.inputImagePath + ', ' + e } }
+                self.result = { 'error': { 'code': 'INTERNAL_ERROR', 'message': 'error infer image: ' + self.inputImagePath + ', ' + e.message } }
                 self.hasError = True
             elapsed = time.time() - t
             logging.info('inference image: %s in %.4f seconds.' % (self.inputImagePath, elapsed))
@@ -179,10 +209,11 @@ def outputLoop(paraInferExecutor):
         elapsed = time.time() - tStart
         logging.info('outputLoop:finished count=%d, mean fps=%.3f, last task sn=%d' % (finishedCount, finishedCount / elapsed, task.sn))
 
-        outImage = TfPoseEstimator.draw_humans(task.inputImage, task.originResult, imgcopy=False)
-        outImagePath = task.inputImagePath + '.' + str(finishedCount) + '.kp.jpg'
-        cv2.imwrite(outImagePath, outImage, [cv2.IMWRITE_JPEG_QUALITY, 90])
-        logging.info('result image: %s' % (outImagePath))
+        # if not task.hasError:
+        #     outImage = TfPoseEstimator.draw_humans(task.inputImage, task.originResult, imgcopy=False)
+        #     outImagePath = task.inputImagePath + '.' + str(finishedCount) + '.kp.jpg'
+        #     cv2.imwrite(outImagePath, outImage, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        #     logging.info('result image: %s' % (outImagePath))
         
         sResult = json.dumps(task.result)
         # sys.stdout.write(sResult[0:80])
