@@ -178,20 +178,22 @@ def outputLoop(paraInferExecutor):
         finishedCount += 1
         elapsed = time.time() - tStart
         logging.info('outputLoop:finished count=%d, mean fps=%.3f, last task sn=%d' % (finishedCount, finishedCount / elapsed, task.sn))
-        sResult = json.dumps(task.result)
-        sys.stdout.write(sResult[0:80])
-        # sys.stdout.write(sResult)
-        sys.stdout.write('\n\n')
 
         outImage = TfPoseEstimator.draw_humans(task.inputImage, task.originResult, imgcopy=False)
-        outImagePath = task.inputImagePath + '.kp.jpg'
+        outImagePath = task.inputImagePath + '.' + str(finishedCount) + '.kp.jpg'
         cv2.imwrite(outImagePath, outImage, [cv2.IMWRITE_JPEG_QUALITY, 90])
         logging.info('result image: %s' % (outImagePath))
+        
+        sResult = json.dumps(task.result)
+        # sys.stdout.write(sResult[0:80])
+        sys.stdout.write(sResult)
+        sys.stdout.write('\n\n')
+        sys.stdout.flush()
 
 def main():
     signal.signal(signal.SIGINT, lambda s, f : os._exit(0))
 
-    exe = ParaInferExecutor(paraCount=1, perThreadModel=True, gpuMemShare=0.4, useTensorrt=False)
+    exe = ParaInferExecutor(paraCount=2, perThreadModel=True, gpuMemShare=0.2, useTensorrt=False)
     exe.load()
     threading.Thread(target=outputLoop, args=(exe,)).start()
 
