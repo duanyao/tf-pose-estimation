@@ -222,9 +222,14 @@ def outputLoop(paraInferExecutor):
         sys.stdout.flush()
 
 def main():
+    parser = argparse.ArgumentParser(description='infer_server_stdio')
+    parser.add_argument('--threads', type=int, default=1)
+    args = parser.parse_args()
+    sys.stderr.write('threads:' + str(args.threads) + '\n')
+
     signal.signal(signal.SIGINT, lambda s, f : os._exit(0))
 
-    exe = ParaInferExecutor(paraCount=2, perThreadModel=True, gpuMemShare=0.15, useTensorrt=False)
+    exe = ParaInferExecutor(paraCount=args.threads, perThreadModel=True, gpuMemShare=0.15, useTensorrt=False)
     exe.load()
     threading.Thread(target=outputLoop, args=(exe,)).start()
 
