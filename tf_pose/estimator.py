@@ -12,11 +12,11 @@ from tf_pose import common
 from tf_pose.common import CocoPart
 from tf_pose.tensblur.smoother import Smoother
 
-try:
-    import tensorflow.contrib.tensorrt as trt
-except Exception as e:
-    logging.exception(e)
-    logging.warning('you will not be able to use tensorrt:')
+# try:
+#     import tensorflow.contrib.tensorrt as trt
+# except Exception as e:
+#     logging.exception(e)
+#     logging.warning('you will not be able to use tensorrt:')
 
 try:
     from tf_pose.pafprocess import pafprocess

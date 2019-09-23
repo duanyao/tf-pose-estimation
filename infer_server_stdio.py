@@ -193,7 +193,7 @@ def outputLoop(paraInferExecutor):
 def main():
     signal.signal(signal.SIGINT, lambda s, f : os._exit(0))
 
-    exe = ParaInferExecutor(paraCount=2, perThreadModel=True, gpuMemShare=0.2, useTensorrt=False)
+    exe = ParaInferExecutor(paraCount=2, perThreadModel=True, gpuMemShare=0.15, useTensorrt=False)
     exe.load()
     threading.Thread(target=outputLoop, args=(exe,)).start()
 
@@ -213,7 +213,7 @@ def main():
             if tStart == 0:
                 tStart = time.time()
             last_line_empty = False
-            sys.stderr.write('your input:' + line + '\n')
+            logging.info('your input:' + line + '\n')
             task = exe.addTask(line, True)
 
 if __name__ == '__main__':
