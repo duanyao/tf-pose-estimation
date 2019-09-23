@@ -97,7 +97,7 @@ class InferTask:
                 self.originResult = humans
                 self.hasError = False
             except Exception as e:
-                self.result = { 'error': { 'code': 'INTERNAL_ERROR', 'message': 'error infer image: ' + self.inputImagePath + ', ' + e.message } }
+                self.result = { 'error': { 'code': 'INTERNAL_ERROR', 'message': 'error infer image: ' + self.inputImagePath + ', ' + str(e) } }
                 self.hasError = True
             elapsed = time.time() - t
             logging.info('inference image: %s in %.4f seconds.' % (self.inputImagePath, elapsed))
@@ -178,7 +178,7 @@ class ParaInferExecutor:
                     task.sn, self.pendingFinishedTask.qsize() + self.finishedTask.qsize()))
             except Exception as e:
                 if task is not None:
-                    logging.error('ParaInferExecutor: uncaught task error: %s (%d);' % (task.inputImagePath, task.sn), e)
+                    logging.exception('ParaInferExecutor: uncaught task error: %s (%d);' % (task.inputImagePath, task.sn))
 
             if task is not None:
                 self.pendingFinishedTask.put((task.sn, task))
