@@ -25,7 +25,7 @@ import numpy as np
 from tf_pose.estimator import TfPoseEstimator
 from tf_pose.networks import get_graph_path, model_wh
 
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.WARNING)
 
 tStart = 0
 finishedCount = 0
@@ -224,12 +224,13 @@ def outputLoop(paraInferExecutor):
 def main():
     parser = argparse.ArgumentParser(description='infer_server_stdio')
     parser.add_argument('--threads', type=int, default=1)
+    parser.add_argument('--gpu-mem-share', type=float, default=0.2)
     args = parser.parse_args()
     sys.stderr.write('threads:' + str(args.threads) + '\n')
 
     signal.signal(signal.SIGINT, lambda s, f : os._exit(0))
 
-    exe = ParaInferExecutor(paraCount=args.threads, perThreadModel=True, gpuMemShare=0.15, useTensorrt=False)
+    exe = ParaInferExecutor(paraCount=args.threads, perThreadModel=True, gpuMemShare=args.gpu_mem_share, useTensorrt=False)
     exe.load()
     threading.Thread(target=outputLoop, args=(exe,)).start()
 
