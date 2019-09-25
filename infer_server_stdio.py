@@ -207,7 +207,11 @@ def outputLoop(paraInferExecutor):
         task = paraInferExecutor.getFinishedTask()
         finishedCount += 1
         elapsed = time.time() - tStart
-        logging.info('outputLoop:finished count=%d, mean fps=%.3f, last task sn=%d' % (finishedCount, finishedCount / elapsed, task.sn))
+        if finishedCount % 20 == 0:
+            logging.warn('outputLoop:finished count=%d, mean fps=%.3f, last task sn=%d' % (finishedCount, finishedCount / elapsed, task.sn))
+        if elapsed > 60:
+            finishedCount = 0
+            tStart = time.time()
 
         # if not task.hasError:
         #     outImage = TfPoseEstimator.draw_humans(task.inputImage, task.originResult, imgcopy=False)
